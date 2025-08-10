@@ -1,0 +1,6 @@
+*.csv
+logs
+.env
+test.py
+company_cache.json
+.venv
