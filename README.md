@@ -5,7 +5,7 @@ This project automates company‑specific research & outreach using the **OpenAI
 - The company’s **website/About pages** via **Tavily** search + extract
 - (Optional) **Company Description** column in your CSV
 
-Resilient script with graceful failures, caching for restarts, parallel/distributed processing & support for multiple API keys at once.
+Resilient script with graceful failures, caching for restarts, debug options, parallel/distributed processing & support for multiple API keys at once.
 (This is a vibe coded script for personal usage. It is a result of 5 hours of hacking. not optimized for prod environments) 
 
 It ships with:
