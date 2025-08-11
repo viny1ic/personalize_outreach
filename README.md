@@ -6,6 +6,7 @@ This project automates company‑specific research & outreach using the **OpenAI
 - (Optional) **Company Description** column in your CSV
 
 Resilient script with graceful failures, caching for restarts, parallel/distributed processing & support for multiple API keys at once.
+(This is a vibe coded script for personal usage. It is a result of 5 hours of hacking. not optimized for prod environments) 
 
 It ships with:
 1) A **main personalizer script** that enriches rows and writes personalized outreach messages.
