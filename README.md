@@ -1,4 +1,4 @@
-# Personalize Outreach — README
+# Personalize Outreach
 
 This project automates company‑specific research & outreach using the **OpenAI Responses API** with context from:
 - Your **profile** (in the script)
