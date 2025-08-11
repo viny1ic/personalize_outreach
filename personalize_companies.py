@@ -368,8 +368,8 @@ About text (may be empty):
 {about_text[:1100]}
 
 Write the final output:
-Line 1: specific admiration or connection.
-Line 2: how I can help, mentioning a tangible benefit.
+Line 1: specific admiration or connection including something specific about the company that shows effort and research.
+Line 2: how I can help, mentioning a tangible benefit. Mention something relevant to the company
 
 Rules:
 - Exactly two lines.
@@ -386,8 +386,8 @@ Rules:
             {"role": "user", "content": [{"type": "input_text", "text": user_prompt}]}
         ],
         "temperature": 1,
-        "reasoning": {"effort": "low"}, 
-        "max_output_tokens": 600
+        "reasoning": {"effort": "medium"}, 
+        "max_output_tokens": 1000
     }
 
     if debug:
@@ -513,8 +513,8 @@ async def fetch_company_about(session: aiohttp.ClientSession,
             {"role": "user", "content": [{"type": "input_text", "text": summary_prompt}]}
         ],
         "temperature": 1,
-        "reasoning": {"effort": "low"}, 
-        "max_output_tokens": 600
+        "reasoning": {"effort": "medium"}, 
+        "max_output_tokens": 1000
     }
 
     if debug:
