@@ -42,84 +42,7 @@ MODEL_SENTENCE = "gpt-5-mini"  # final sentence generation step
 # YOUR PROFILE (included in every generation)
 # ===========================================
 PROFILE_PROMPT = """
-Cybersecurity professional specialized in security engineering & incident response.
-Engineered secure, fault-tolerant blockchain nodes for 8 chains with robust support and
-monitoring. Delivered critical projects & training for military organizations, NGOs, &
-Educational institutions. Passionate about open source, self hosting and infrastructure
-reliability. Looking to scale & lead security initiatives in high-impact environments.
-PROFESSIONAL EXPERIENCE
-FULL TIME
-Luganodes | Cloud Security Engineer 
-Python | Docker |IaC | AWS | Proxmox | Prometheus | Grafana | Linux | Nginx | EDR
-Completed Computer Engineering degree in 3 years and started working full time during the 4th year.
-Scaled cloud infrastructure, deployed fault tolerant monitoring solutions, designed and deployed Internal network.
-Build controls & policies; owned audit prep, earning ISO 27001, GDPR, & SOC2 certs in an exceptional 2-month period.
-The compliance & scaled infra led to $300M in revenue, onboarding 5 enterprise clients & 9 strategic partnerships.
-Carried out company wide threat modeling (STRIDE), remediated 13 vulnerabilities, implemented 19 security controls.
-Single-handedly deployed blockchain validators with 100% uptime, providing 24/7 On-Call support without any rotation.
-Nebctl (Ansible | Python | PKI | Firewalls | IPTables | DNS | RBAC | Postman)
-Led development of open source enterprise mesh-based VPN network, deployed solution at scale.
-Cut down hosting costs, network load, compute requirements exponentially, while eliminating single points of failure.
-Developed GUIs, CLIs & system daemons for seamless deployment & management of endpoints.
-Leveraged encryption systems like AES-256 & TLS 1.3 to deliver end to end encryption throughout the network.
-PART TIME
-George Washington University |Student Security Specialist 3
-Incident Response | SIEM | Azure | Nessus | Tenable | IDAM | EDR | Wireshark | NIST
-Worked as a key SOC member while a student at GWU. responded to security incidents across a 30,000+ user network.
-Automated email incident response with SOAR Playbooks (Splunk), reducing response time by 400% organization wide.
-Leveraged platforms like Cisco Email Security appliance (ESA), Palo alto firewall, Google vault, AWS, Microsoft Azure,
-VirusTotal, facilitating organization wide, end to end, accurate & quick Incident response.
-CDAC | Cyber Security Intern 
-Python | GDB | QEMU | LLVM | C/C++ | Assembly | RFC 7826 | Wireshark | Nmap
-Implemented protocol (RTSP) for IoT honeypot, which was deployed nationwide to detect firmware based attacks.
-Analyzed nationwide network traffic data from honeypots, contributing to early detection of latest malware.
-Optimized sandbox environment by automating dynamic malware analysis. Slashing analysis time by a factor of 8.
-Conducted hybrid analysis of botnet malware (Mirai) targeting UNIX based IoT devices on ARM architecture CPUs.
-The robotics club of VIT | Advisory Board member 
-Arduino | IoT Security | Embedded C | Ethical hacking | Kali Linux | Bash
-Balanced nighttime lab work with daytime academics, rising from member to advisory board member within 3 years.
-Headed the Cyber Security Department of the club, providing leadership & mentorship to department members.
-Orchestrated team efforts to execute successful events, including Hackathons, workshops, robowars, & charity events.
-Contributed significantly to team-based research & development projects, actively participating in collaborative efforts.
-EDUCATION
-The George Washington University, Washington DC 
-MS in Cyber Security
-Vellore Institute of Technology, Vellore, India 
-B.Tech in Computer Science & Engineering
-CERTIFICATIONS & ACHIEVEMENTS
-CompTIA Security+ 
-AWS Certified Cloud Practitioner 
-Certified Ethical Hacker (CEHv11) by EC-Council 
-Entrepreneurship track & Capture the Flag (CTF) winner at HackPSU 2025 (Pennsylvania State University).
-Best Robotics & IOT hack in Access denied hackathon.
-Best hardware hack team in Win Hacks Hackathon.
-Title winner team in Robowars 2021 at Parul University.
-PROJECTS
-Audio Streaming Protocol with OAuth Authentication
-Python | Auth0 | Cloudflare DDNS | Sockets | Flask | SHA 256
-Designed an application layer protocol that controls audio streaming from scratch.
-Implemented authentication server (OAuth, AES-256-GCM, PBKDF) and deployed on my doorbell camera.
-Created a proprietary 16-bit character encoding scheme for control headers in a custom packet design.
-Capture the Flag (CTF) Website (JavaScript | HTML | CSS)
-Showcased an array of cybersecurity challenges designed for users to solve & enhance their skills.
-Developed for users to improve their web, cryptography, Reverse Engineering & OSINT skills.
-self-hosted using Cloudflare DDNS (dynamic DNS) for DHCP address resolution running on a Raspberry Pi.
-Cybersecurity Writeups & Articles
-Penetration Testing | Bug Bounty | Port Forwarding | Linux Ricing | Github | Markdown
-Authored comprehensive write-ups for my CEH preparation, providing valuable resources for others.
-Documented walkthroughs for TryHackMe challenges, offering optimal solutions for challenging problems.
-Published trending blogs on cybersecurity related issues I was facing & how I solved them on medium.com.
-SKILLS
-Security Operations: Incident Response | Compliance | SIEM (Splunk) | IDS/IPS | Firewalls | Cisco ESA | Palo Alto
-Networking & Security: HTTP/S | TCP/IP | TLS/SSL | BGP | Penetration Testing | Risk Assessment & Mitigation | Threat
-Modeling (STRIDE) | Cryptography | Reverse Engineering | Nmap | Wireshark | Burpsuite | VPNs | OWASP top 10
-Programming & Automation: Python | Flask | Infrastructure as Code | Bash | Rust | Java | Git/GitHub | Assembly | C/C++
-| Ansible | Node.js | JavaScript | Kubernetes | Terraform | GCP
-Cloud & DevOps: AWS | Azure | Docker | Proxmox | Prometheus | Grafana | Virtualisation | Containerization | Emulation |
-High Availability Infrastructures | DDNS | Cloudflare | CI/CD
-Databases & Infrastructure: SQL | MongoDB | Firebase
-Miscellaneous: Generative AI | LLMs | Blockchain | Agentic AI | Linux | Microsoft Office | Google Suite
-Soft Skills: Leadership | Problem-Solving | Public Speaking | Technical Documentation | Communication
+Sample Profile
 """
 # =====================
 # Search query templates
@@ -437,8 +360,7 @@ async def openai_generate(session: aiohttp.ClientSession, api_key: str, model: s
                           company_name: str, about_text: str, domain: Optional[str],
                           company_tag: str, debug: bool = False) -> Tuple[str, str]:
     system = (
-        "You write two concise, humble outreach sentences for a cold email to a company."
-        "\n take context from my profile & the company details. Try to explain Intention and alignment with the goals and work of the company using my experiences and/or relavant skillset. Try to inculcate the fact that I am looking for a growth, scale, development etc oriented company. Try to express how I can contribute to the success of the company. project what results/success my actions would bring to the company. keep each line under 20 words. Stay kind & humble. Do not come across as overconfident or cocky."
+        "Sample system prompt for OpenAI Responses API.\n"
     )
 
     user_prompt = f"""
@@ -451,15 +373,7 @@ Website domain: {domain or "N/A"}
 About text (may be empty):
 {about_text[:1100]}
 
-Write the final output:
-Line 1: specific quality that is unique & impressive, start sentence with "I'm impressed by", including something specific about the company that shows effort and research.
-Line 2: how I can help, start with "I'd love to", mentioning tangible benefit(s). It should be relevant to the company. At least 1 benefit should be related to cybersecurity. Rest may be related to any other skill/experience or cybersecurity if required. 
-
-Rules:
-- Exactly two lines.
-- Each ≤20 words.
-- Kind, humble, concrete.
-- no emojis, no exclamation marks.
+Specific instructions
 """
 
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
