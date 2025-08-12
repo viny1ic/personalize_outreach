@@ -42,7 +42,84 @@ MODEL_SENTENCE = "gpt-5-mini"  # final sentence generation step
 # YOUR PROFILE (included in every generation)
 # ===========================================
 PROFILE_PROMPT = """
-Sample prompt
+Cybersecurity professional specialized in security engineering & incident response.
+Engineered secure, fault-tolerant blockchain nodes for 8 chains with robust support and
+monitoring. Delivered critical projects & training for military organizations, NGOs, &
+Educational institutions. Passionate about open source, self hosting and infrastructure
+reliability. Looking to scale & lead security initiatives in high-impact environments.
+PROFESSIONAL EXPERIENCE
+FULL TIME
+Luganodes | Cloud Security Engineer 
+Python | Docker |IaC | AWS | Proxmox | Prometheus | Grafana | Linux | Nginx | EDR
+Completed Computer Engineering degree in 3 years and started working full time during the 4th year.
+Scaled cloud infrastructure, deployed fault tolerant monitoring solutions, designed and deployed Internal network.
+Build controls & policies; owned audit prep, earning ISO 27001, GDPR, & SOC2 certs in an exceptional 2-month period.
+The compliance & scaled infra led to $300M in revenue, onboarding 5 enterprise clients & 9 strategic partnerships.
+Carried out company wide threat modeling (STRIDE), remediated 13 vulnerabilities, implemented 19 security controls.
+Single-handedly deployed blockchain validators with 100% uptime, providing 24/7 On-Call support without any rotation.
+Nebctl (Ansible | Python | PKI | Firewalls | IPTables | DNS | RBAC | Postman)
+Led development of open source enterprise mesh-based VPN network, deployed solution at scale.
+Cut down hosting costs, network load, compute requirements exponentially, while eliminating single points of failure.
+Developed GUIs, CLIs & system daemons for seamless deployment & management of endpoints.
+Leveraged encryption systems like AES-256 & TLS 1.3 to deliver end to end encryption throughout the network.
+PART TIME
+George Washington University |Student Security Specialist 3
+Incident Response | SIEM | Azure | Nessus | Tenable | IDAM | EDR | Wireshark | NIST
+Worked as a key SOC member while a student at GWU. responded to security incidents across a 30,000+ user network.
+Automated email incident response with SOAR Playbooks (Splunk), reducing response time by 400% organization wide.
+Leveraged platforms like Cisco Email Security appliance (ESA), Palo alto firewall, Google vault, AWS, Microsoft Azure,
+VirusTotal, facilitating organization wide, end to end, accurate & quick Incident response.
+CDAC | Cyber Security Intern 
+Python | GDB | QEMU | LLVM | C/C++ | Assembly | RFC 7826 | Wireshark | Nmap
+Implemented protocol (RTSP) for IoT honeypot, which was deployed nationwide to detect firmware based attacks.
+Analyzed nationwide network traffic data from honeypots, contributing to early detection of latest malware.
+Optimized sandbox environment by automating dynamic malware analysis. Slashing analysis time by a factor of 8.
+Conducted hybrid analysis of botnet malware (Mirai) targeting UNIX based IoT devices on ARM architecture CPUs.
+The robotics club of VIT | Advisory Board member 
+Arduino | IoT Security | Embedded C | Ethical hacking | Kali Linux | Bash
+Balanced nighttime lab work with daytime academics, rising from member to advisory board member within 3 years.
+Headed the Cyber Security Department of the club, providing leadership & mentorship to department members.
+Orchestrated team efforts to execute successful events, including Hackathons, workshops, robowars, & charity events.
+Contributed significantly to team-based research & development projects, actively participating in collaborative efforts.
+EDUCATION
+The George Washington University, Washington DC 
+MS in Cyber Security
+Vellore Institute of Technology, Vellore, India 
+B.Tech in Computer Science & Engineering
+CERTIFICATIONS & ACHIEVEMENTS
+CompTIA Security+ 
+AWS Certified Cloud Practitioner 
+Certified Ethical Hacker (CEHv11) by EC-Council 
+Entrepreneurship track & Capture the Flag (CTF) winner at HackPSU 2025 (Pennsylvania State University).
+Best Robotics & IOT hack in Access denied hackathon.
+Best hardware hack team in Win Hacks Hackathon.
+Title winner team in Robowars 2021 at Parul University.
+PROJECTS
+Audio Streaming Protocol with OAuth Authentication
+Python | Auth0 | Cloudflare DDNS | Sockets | Flask | SHA 256
+Designed an application layer protocol that controls audio streaming from scratch.
+Implemented authentication server (OAuth, AES-256-GCM, PBKDF) and deployed on my doorbell camera.
+Created a proprietary 16-bit character encoding scheme for control headers in a custom packet design.
+Capture the Flag (CTF) Website (JavaScript | HTML | CSS)
+Showcased an array of cybersecurity challenges designed for users to solve & enhance their skills.
+Developed for users to improve their web, cryptography, Reverse Engineering & OSINT skills.
+self-hosted using Cloudflare DDNS (dynamic DNS) for DHCP address resolution running on a Raspberry Pi.
+Cybersecurity Writeups & Articles
+Penetration Testing | Bug Bounty | Port Forwarding | Linux Ricing | Github | Markdown
+Authored comprehensive write-ups for my CEH preparation, providing valuable resources for others.
+Documented walkthroughs for TryHackMe challenges, offering optimal solutions for challenging problems.
+Published trending blogs on cybersecurity related issues I was facing & how I solved them on medium.com.
+SKILLS
+Security Operations: Incident Response | Compliance | SIEM (Splunk) | IDS/IPS | Firewalls | Cisco ESA | Palo Alto
+Networking & Security: HTTP/S | TCP/IP | TLS/SSL | BGP | Penetration Testing | Risk Assessment & Mitigation | Threat
+Modeling (STRIDE) | Cryptography | Reverse Engineering | Nmap | Wireshark | Burpsuite | VPNs | OWASP top 10
+Programming & Automation: Python | Flask | Infrastructure as Code | Bash | Rust | Java | Git/GitHub | Assembly | C/C++
+| Ansible | Node.js | JavaScript | Kubernetes | Terraform | GCP
+Cloud & DevOps: AWS | Azure | Docker | Proxmox | Prometheus | Grafana | Virtualisation | Containerization | Emulation |
+High Availability Infrastructures | DDNS | Cloudflare | CI/CD
+Databases & Infrastructure: SQL | MongoDB | Firebase
+Miscellaneous: Generative AI | LLMs | Blockchain | Agentic AI | Linux | Microsoft Office | Google Suite
+Soft Skills: Leadership | Problem-Solving | Public Speaking | Technical Documentation | Communication
 """
 # =====================
 # Search query templates
@@ -148,14 +225,64 @@ def save_cache(path: str, data: Dict[str, Any]) -> None:
 class QuotaExhausted(RuntimeError):
     pass
 
+# ---- ADDED: differentiate rate limit vs quota + multi-key rotation ----
+class RateLimited(BaseException):
+    """Use BaseException so it isn't swallowed by 'except Exception' in main loop."""
+    pass
+
+TAVILY_KEYS: List[str] = []
+CURRENT_TAVILY_KEY_IDX: int = 0
+
+def _discover_tavily_keys() -> List[str]:
+    """Collect numbered Tavily keys from env: TAVILY_API_KEY_1..N (or _0..N). If none, use base."""
+    keys: List[Tuple[int, str]] = []
+    for k, v in os.environ.items():
+        m = re.fullmatch(r"TAVILY_API_KEY_(\d+)", k)
+        if m and isinstance(v, str) and v.strip():
+            keys.append((int(m.group(1)), v.strip()))
+    if keys:
+        keys.sort(key=lambda x: x[0])
+        return [v for _, v in keys]
+    base = (os.environ.get("TAVILY_API_KEY") or "").strip()
+    return [base] if base else []
+
+def _classify_tavily_error(status: int, body_text: str) -> str:
+    t = (body_text or "").lower()
+    if status == 429 or "rate limit" in t or "too many requests" in t:
+        return "rate_limit"
+    # treat plan/usage/upgrade messages and 402/403/432 as quota
+    if (status in (402, 403, 432)) or any(x in t for x in [
+        "insufficient_quota", "quota exceeded", "over your current quota",
+        "payment required", "out of credits", "no credits", "insufficient balance",
+        "exceeds your plan", "plan's set usage limit", "upgrade your plan"
+    ]):
+        return "quota"
+    return "other"
+
+def _current_tavily_key() -> str:
+    if not TAVILY_KEYS:
+        return ""
+    return TAVILY_KEYS[CURRENT_TAVILY_KEY_IDX]
+
+def _advance_tavily_key() -> bool:
+    global CURRENT_TAVILY_KEY_IDX
+    if not TAVILY_KEYS:
+        return False
+    if CURRENT_TAVILY_KEY_IDX + 1 < len(TAVILY_KEYS):
+        CURRENT_TAVILY_KEY_IDX += 1
+        return True
+    return False
+# ----------------------------------------------------------------------
+
 def looks_like_quota(status: int, body_text: str) -> bool:
     t = (body_text or "").lower()
     return (
-        status in (402, 429) or
+        status in (402, 403, 429, 432) or
         any(k in t for k in [
             "insufficient_quota", "quota exceeded", "over your current quota",
             "rate limit", "too many requests", "payment required",
-            "out of credits", "no credits", "insufficient balance"
+            "out of credits", "no credits", "insufficient balance",
+            "exceeds your plan", "plan's set usage limit", "upgrade your plan"
         ])
     )
 
@@ -176,16 +303,33 @@ async def tavily_search(session: aiohttp.ClientSession, api_key: str, query: str
         print(json.dumps(payload, indent=2, ensure_ascii=False))
         _log_json(os.path.join(LOG_DIR, f"{company_tag}.tavily.search.request.json"), payload, True)
 
-    async with session.post(TAVILY_SEARCH_URL, json=payload, timeout=TIMEOUT_SECS) as resp:
-        txt = await resp.text()
-        if debug:
-            print(f"\n[DEBUG] --- RAW RESPONSE from {TAVILY_SEARCH_URL} ---")
-            print(txt)
-        if resp.status != 200:
-            if looks_like_quota(resp.status, txt):
-                raise QuotaExhausted("Tavily quota exhausted or rate limited.")
-            resp.raise_for_status()
-        data = json.loads(txt)
+    # ---- MODIFIED: rotate on quota, stop on rate limit ----
+    while True:
+        use_key = _current_tavily_key()
+        payload["api_key"] = use_key
+        async with session.post(TAVILY_SEARCH_URL, json=payload, timeout=TIMEOUT_SECS) as resp:
+            txt = await resp.text()
+            if debug:
+                print(f"\n[DEBUG] --- RAW RESPONSE from {TAVILY_SEARCH_URL} ---")
+                print(txt)
+            if resp.status != 200:
+                kind = _classify_tavily_error(resp.status, txt)
+                if kind == "rate_limit":
+                    raise RateLimited("Tavily rate limited.")
+                if kind == "quota":
+                    advanced = _advance_tavily_key()
+                    if debug:
+                        nxt = _current_tavily_key() if advanced else "(none)"
+                        print(f"[DEBUG] Tavily quota exhausted; switching={advanced}, new_key={nxt}")
+                    if advanced:
+                        continue
+                    raise QuotaExhausted("All Tavily API keys exhausted.")
+                if looks_like_quota(resp.status, txt):
+                    raise QuotaExhausted("Tavily quota exhausted or rate limited.")
+                resp.raise_for_status()
+            data = json.loads(txt)
+            break
+    # -------------------------------------------------------
 
     _log_json(os.path.join(LOG_DIR, f"{company_tag}.tavily.search.response.json"), data, debug)
 
@@ -210,16 +354,33 @@ async def tavily_extract(session: aiohttp.ClientSession, api_key: str, urls: Lis
         print(json.dumps(payload, indent=2, ensure_ascii=False))
         _log_json(os.path.join(LOG_DIR, f"{company_tag}.tavily.extract.request.json"), payload, True)
 
-    async with session.post(TAVILY_EXTRACT_URL, json=payload, timeout=TIMEOUT_SECS) as resp:
-        txt = await resp.text()
-        if debug:
-            print(f"\n[DEBUG] --- RAW RESPONSE from {TAVILY_EXTRACT_URL} ---")
-            print(txt)
-        if resp.status != 200:
-            if looks_like_quota(resp.status, txt):
-                raise QuotaExhausted("Tavily quota exhausted or rate limited.")
-            resp.raise_for_status()
-        data = json.loads(txt)
+    # ---- MODIFIED: rotate on quota, stop on rate limit ----
+    while True:
+        use_key = _current_tavily_key()
+        payload["api_key"] = use_key
+        async with session.post(TAVILY_EXTRACT_URL, json=payload, timeout=TIMEOUT_SECS) as resp:
+            txt = await resp.text()
+            if debug:
+                print(f"\n[DEBUG] --- RAW RESPONSE from {TAVILY_EXTRACT_URL} ---")
+                print(txt)
+            if resp.status != 200:
+                kind = _classify_tavily_error(resp.status, txt)
+                if kind == "rate_limit":
+                    raise RateLimited("Tavily rate limited.")
+                if kind == "quota":
+                    advanced = _advance_tavily_key()
+                    if debug:
+                        nxt = _current_tavily_key() if advanced else "(none)"
+                        print(f"[DEBUG] Tavily quota exhausted; switching={advanced}, new_key={nxt}")
+                    if advanced:
+                        continue
+                    raise QuotaExhausted("All Tavily API keys exhausted.")
+                if looks_like_quota(resp.status, txt):
+                    raise QuotaExhausted("Tavily quota exhausted or rate limited.")
+                resp.raise_for_status()
+            data = json.loads(txt)
+            break
+    # -------------------------------------------------------
 
     _log_json(os.path.join(LOG_DIR, f"{company_tag}.tavily.extract.response.json"), data, debug)
 
@@ -276,7 +437,8 @@ async def openai_generate(session: aiohttp.ClientSession, api_key: str, model: s
                           company_name: str, about_text: str, domain: Optional[str],
                           company_tag: str, debug: bool = False) -> Tuple[str, str]:
     system = (
-        "Sample system instructions"
+        "You write two concise, humble outreach sentences for a cold email to a company."
+        "\n take context from my profile & the company details. Try to explain Intention and alignment with the goals and work of the company using my experiences and/or relavant skillset. Try to inculcate the fact that I am looking for a growth, scale, development etc oriented company. Try to express how I can contribute to the success of the company. project what results/success my actions would bring to the company. keep each line under 20 words. Stay kind & humble. Do not come across as overconfident or cocky."
     )
 
     user_prompt = f"""
@@ -289,7 +451,15 @@ Website domain: {domain or "N/A"}
 About text (may be empty):
 {about_text[:1100]}
 
-Specific prompt instructions here
+Write the final output:
+Line 1: specific quality that is unique & impressive, start sentence with "I'm impressed by", including something specific about the company that shows effort and research.
+Line 2: how I can help, start with "I'd love to", mentioning tangible benefit(s). It should be relevant to the company. At least 1 benefit should be related to cybersecurity. Rest may be related to any other skill/experience or cybersecurity if required. 
+
+Rules:
+- Exactly two lines.
+- Each ≤20 words.
+- Kind, humble, concrete.
+- no emojis, no exclamation marks.
 """
 
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
@@ -300,8 +470,8 @@ Specific prompt instructions here
             {"role": "user", "content": [{"type": "input_text", "text": user_prompt}]}
         ],
         "temperature": 1,
-        "reasoning": {"effort": "medium"}, 
-        "max_output_tokens": 1000
+        "reasoning": {"effort": "low"}, 
+        "max_output_tokens": 1500
     }
 
     if debug:
@@ -427,8 +597,8 @@ async def fetch_company_about(session: aiohttp.ClientSession,
             {"role": "user", "content": [{"type": "input_text", "text": summary_prompt}]}
         ],
         "temperature": 1,
-        "reasoning": {"effort": "medium"}, 
-        "max_output_tokens": 1000
+        "reasoning": {"effort": "low"}, 
+        "max_output_tokens": 1500
     }
 
     if debug:
@@ -502,10 +672,16 @@ async def process_one(company_row: Dict[str, Any],
 # Main
 # =====
 async def main_async(args):
-    tavily_key = (os.environ.get("TAVILY_API_KEY") or "").strip()
-    openai_key = (os.environ.get("OPENAI_API_KEY") or "").strip()
-    if not tavily_key:
+    # ---- MODIFIED: discover & initialize Tavily keys from .env as numbered variables ----
+    global TAVILY_KEYS, CURRENT_TAVILY_KEY_IDX
+    TAVILY_KEYS = _discover_tavily_keys()
+    if not TAVILY_KEYS:
         raise SystemExit("Missing TAVILY_API_KEY")
+    CURRENT_TAVILY_KEY_IDX = 0
+    tavily_key = _current_tavily_key()
+    # -----------------------------------------------------------------------
+
+    openai_key = (os.environ.get("OPENAI_API_KEY") or "").strip()
     if not openai_key:
         raise SystemExit("Missing OPENAI_API_KEY")
 
